@@ -1,7 +1,7 @@
 import { differenceInMilliseconds } from "date-fns";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { LoadMenuMiddleware } from "./load-menu";
+import { LoadMenuMiddleware } from "./menu";
 
 type FileSystemCacheOptions = {
   cacheDirectory: string;

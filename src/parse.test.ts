@@ -17,7 +17,7 @@ describe("#parseResponse", () => {
   it("parses setting json", async () => {
     const resp = await loadAndParseFixture();
 
-    const day = resp.data.menu_month_calendar[0];
+    const day = resp.data.menu_month_calendar[17];
 
     expect(day).toBeTruthy();
     expect(typeof (day as any).setting).toEqual("object");
@@ -25,7 +25,7 @@ describe("#parseResponse", () => {
   it("parses setting_original json", async () => {
     const resp = await loadAndParseFixture();
 
-    const day = resp.data.menu_month_calendar[0];
+    const day = resp.data.menu_month_calendar[17];
 
     expect(day).toBeTruthy();
     expect(typeof (day as any).setting_original).toEqual("object");
@@ -33,11 +33,12 @@ describe("#parseResponse", () => {
 
   it("parses a day with no menu items", async () => {
     const resp = await loadAndParseFixture();
-    const day = resp.data.menu_month_calendar[0];
+
+    const day = resp.data.menu_month_calendar[17];
 
     expect(day).toEqual({
       id: 1002676025,
-      day: new Date("2024-08-26T00:00:00.000Z"),
+      day: new Date(2024, 7, 26),
       menu_month_id: 15168103,
       setting: {
         current_display: [],
@@ -63,11 +64,11 @@ describe("#parseResponse", () => {
 
   it("parses a day with menu items", async () => {
     const resp = await loadAndParseFixture();
-    const day = resp.data.menu_month_calendar[3];
+    const day = resp.data.menu_month_calendar[20];
 
     expect(day).toEqual({
       id: 1002676029,
-      day: new Date("2024-08-29T00:00:00.000Z"),
+      day: new Date(2024, 7, 29),
       menu_month_id: 15168103,
       setting: {
         current_display: [
@@ -326,7 +327,6 @@ describe("#parseResponse", () => {
             weight: 16,
           },
         ],
-        days_off: [],
         hidden_items: [
           {
             item: "orig_choice_of",
