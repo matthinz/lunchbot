@@ -39,7 +39,15 @@ export function slashCommand({
   cacheTTLInMS,
 }: SlashCommandOptions): (req: Request, res: Response) => Promise<void> {
   return async (req, res) => {
-    const body = BodySchema.parse(req.body);
+    let body: z.infer<typeof BodySchema>;
+
+    try {
+      body = BodySchema.parse(req.body);
+    } catch (err) {
+      console.error(req.body);
+      console.error(err);
+      throw err;
+    }
 
     const menu = await loadMenu({
       districtID,
