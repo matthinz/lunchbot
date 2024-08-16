@@ -1,11 +1,14 @@
 import express, { Request, Response } from "express";
 import { menuRoute } from "./routes/menu";
+import { slashCommand } from "./routes/slash-command";
 import { AppOptions } from "./types";
 
 export function createApp(options: AppOptions): { start: () => Promise<void> } {
   const app = express();
 
   app.get("/menu", asyncRouteHandler(menuRoute(options)));
+
+  app.post("/slack/lunch", asyncRouteHandler(slashCommand(options)));
 
   const start = () =>
     new Promise<void>((resolve, reject) => {
