@@ -7,7 +7,11 @@ import { AppOptions, MenuCalendarDay } from "../types";
 
 type SlashCommandOptions = Pick<
   AppOptions,
-  "menuID" | "districtID" | "cacheTTLInMS" | "cacheDirectory"
+  | "menuID"
+  | "districtID"
+  | "cacheTTLInMS"
+  | "cacheDirectory"
+  | "slackVerificationToken"
 >;
 
 type Result = {
@@ -37,6 +41,7 @@ export function slashCommand({
   menuID,
   cacheDirectory,
   cacheTTLInMS,
+  slackVerificationToken,
 }: SlashCommandOptions): (req: Request, res: Response) => Promise<void> {
   return async (req, res) => {
     let body: z.infer<typeof BodySchema>;
@@ -45,8 +50,12 @@ export function slashCommand({
       body = BodySchema.parse(req.body);
     } catch (err) {
       console.error(req.body);
-      console.error(err);
       throw err;
+    }
+
+    if (body.token !== slackVerificationToken) {
+      res.status(403).end();
+      return;
     }
 
     const menu = await loadMenu({

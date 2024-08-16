@@ -13,6 +13,7 @@ export const AppOptionsSchema = z
     LUNCH_BOT_CACHE_DIR: z.string().default(DEFAULT_CACHE_DIRECTORY),
     LUNCH_BOT_DISTRICT_ID: z.coerce.number().int(),
     LUNCH_BOT_MENU_ID: z.coerce.number().int(),
+    LUNCH_BOT_SLACK_VERIFICATION_TOKEN: z.string(),
     PORT: z.coerce.number().int().default(DEFAULT_PORT),
   })
   .transform(
@@ -21,6 +22,7 @@ export const AppOptionsSchema = z
       LUNCH_BOT_CACHE_DIR: cacheDirectory,
       LUNCH_BOT_DISTRICT_ID: districtID,
       LUNCH_BOT_MENU_ID: menuID,
+      LUNCH_BOT_SLACK_VERIFICATION_TOKEN: slackVerificationToken,
       PORT: port,
     }) => ({
       cacheTTLInMS,
@@ -28,6 +30,7 @@ export const AppOptionsSchema = z
       districtID,
       menuID,
       port,
+      slackVerificationToken,
     }),
   );
 
