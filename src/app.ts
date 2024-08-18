@@ -1,4 +1,6 @@
 import express, { Request, Response } from "express";
+import { createFileSystemCacheMiddleware, createHttpGetter } from "./http";
+import { createMySchoolMenusFetcher } from "./my-school-menus";
 import { menuRoute } from "./routes/menu";
 import { slashCommand } from "./routes/slash-command";
 import { AppOptions } from "./types";
@@ -6,10 +8,25 @@ import { AppOptions } from "./types";
 export function createApp(options: AppOptions): { start: () => Promise<void> } {
   const app = express();
 
-  app.get("/menu", asyncRouteHandler(menuRoute(options)));
+  const fetcher = createMySchoolMenusFetcher({
+    ...options,
+    httpGetter: createHttpGetter({
+      middleware: [
+        createFileSystemCacheMiddleware({
+          cacheDirectory: options.cacheDirectory,
+          ttlMS: options.cacheTTLInMS,
+        }),
+      ],
+    }),
+  });
+
+  app.get("/menu", asyncRouteHandler(menuRoute({ ...options, fetcher })));
 
   app.use("/slack/lunch", express.urlencoded());
-  app.post("/slack/lunch", asyncRouteHandler(slashCommand(options)));
+  app.post(
+    "/slack/lunch",
+    asyncRouteHandler(slashCommand({ ...options, fetcher })),
+  );
 
   const start = () =>
     new Promise<void>((resolve, reject) => {

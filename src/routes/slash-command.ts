@@ -1,18 +1,15 @@
-import { isBefore, isSameDay, isThisWeek, isToday, isTomorrow } from "date-fns";
 import { Request, Response } from "express";
 import { z } from "zod";
-import { fileSystemCache } from "../fs-cache";
-import { loadMenu } from "../menu";
-import { AppOptions, MenuCalendarDay } from "../types";
+import {
+  calendarDateFrom,
+  calendarMonthOf,
+  isSameCalendarDate,
+} from "../calendar-dates";
+import { AppOptions, MenuCalendarDay, MenuFetcher } from "../types";
 
-type SlashCommandOptions = Pick<
-  AppOptions,
-  | "menuID"
-  | "districtID"
-  | "cacheTTLInMS"
-  | "cacheDirectory"
-  | "slackVerificationToken"
->;
+type SlashCommandOptions = Pick<AppOptions, "slackVerificationToken"> & {
+  fetcher: MenuFetcher;
+};
 
 type Result = {
   days: MenuCalendarDay[];
@@ -37,11 +34,8 @@ const BodySchema = z.object({
 });
 
 export function slashCommand({
-  districtID,
-  menuID,
-  cacheDirectory,
-  cacheTTLInMS,
   slackVerificationToken,
+  fetcher,
 }: SlashCommandOptions): (req: Request, res: Response) => Promise<void> {
   return async (req, res) => {
     let body: z.infer<typeof BodySchema>;
@@ -58,16 +52,7 @@ export function slashCommand({
       return;
     }
 
-    const menu = await loadMenu({
-      districtID,
-      menuID,
-      middleware: [
-        fileSystemCache({
-          cacheDirectory,
-          ttlMS: cacheTTLInMS,
-        }),
-      ],
-    });
+    const menu = await fetcher(calendarMonthOf(new Date()));
 
     const result = parseInput(body.text, menu);
 
@@ -103,78 +88,22 @@ function buildResponse(result: Result | undefined): any {
   };
 }
 
-function nextSchoolDay(menu: MenuCalendarDay[], asOf: Date = new Date()) {
-  const sorted = [...menu].sort((a, b) => a.date.getTime() - b.date.getTime());
-
-  let best: MenuCalendarDay | undefined;
-
-  for (const d of sorted) {
-    if (isSameDay(d.date, asOf)) {
-      best = d;
-      break;
-    }
-
-    if (isBefore(asOf, d.date)) {
-      continue;
-    }
-
-    if (best == null) {
-      best = d;
-      continue;
-    }
-
-    if (isBefore(d.date, best.date)) {
-      best = d;
-      continue;
-    }
-  }
-
-  return best;
-}
-
 function parseInput(
   input: string,
   allDays: MenuCalendarDay[],
 ): Result | undefined {
   input = input.trim().toLowerCase();
 
-  let day: MenuCalendarDay | undefined;
-
   switch (input) {
     case "":
-      day = nextSchoolDay(allDays, new Date());
-
-      return day
-        ? {
-            days: [day],
-            description: "the next school day",
-          }
-        : undefined;
-
     case "today":
-      day = allDays.find((d) => isToday(d.date));
+      const date = calendarDateFrom(new Date());
+      const day = allDays.find((d) => isSameCalendarDate(d.date, date));
+
       return day
         ? {
             days: [day],
             description: "today",
-          }
-        : undefined;
-
-    case "tomorrow":
-      day = allDays.find((d) => isTomorrow(d.date));
-      return day
-        ? {
-            days: [day],
-            description: "tomorrow",
-          }
-        : undefined;
-
-    case "this week":
-      const days = allDays.filter((d) => isThisWeek(d.date));
-      return allDays.length > 0
-        ? {
-            days,
-            description: "this week",
           }
         : undefined;
   }

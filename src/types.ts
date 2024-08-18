@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { parseCalendarDate } from "./calendar-dates";
 
 const DEFAULT_CACHE_DIRECTORY = ".cache";
 const DEFAULT_PORT = 3000;
@@ -13,7 +14,7 @@ export const AppOptionsSchema = z
     LUNCH_BOT_CACHE_DIR: z.string().default(DEFAULT_CACHE_DIRECTORY),
     LUNCH_BOT_DISTRICT_ID: z.coerce.number().int(),
     LUNCH_BOT_MENU_ID: z.coerce.number().int(),
-    LUNCH_BOT_SLACK_VERIFICATION_TOKEN: z.string(),
+    LUNCH_BOT_SLACK_VERIFICATION_TOKEN: z.string().optional(),
     PORT: z.coerce.number().int().default(DEFAULT_PORT),
   })
   .transform(
@@ -36,8 +37,21 @@ export const AppOptionsSchema = z
 
 export type AppOptions = z.infer<typeof AppOptionsSchema>;
 
+export const CalendarDateSchema = z.string().transform(parseCalendarDate);
+
+export type CalendarDate = {
+  readonly year: number;
+  readonly month: number;
+  readonly day: number;
+};
+
+export type CalendarMonth = {
+  readonly year: number;
+  readonly month: number;
+};
+
 export type MenuCalendarDay = {
-  date: Date;
+  date: CalendarDate;
   note?: string;
   categories: MenuCategory[];
 };
@@ -56,3 +70,5 @@ export type MenuCategory = {
   name: string;
   items: MenuItem[];
 };
+
+export type MenuFetcher = (month: CalendarMonth) => Promise<MenuCalendarDay[]>;

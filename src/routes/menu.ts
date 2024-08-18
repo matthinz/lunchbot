@@ -1,51 +1,37 @@
-import { format as formatDate, isSameDay, parse as parseDate } from "date-fns";
 import { Request, Response } from "express";
 import { z } from "zod";
-import { fileSystemCache } from "../fs-cache";
-import { loadMenu } from "../menu";
-import { AppOptions } from "../types";
-type MenuRouteOptions = Pick<
-  AppOptions,
-  "menuID" | "districtID" | "cacheTTLInMS" | "cacheDirectory"
->;
+import {
+  calendarDateFrom,
+  formatCalendarDate,
+  isSameCalendarDate,
+} from "../calendar-dates";
+import { CalendarDateSchema, MenuFetcher } from "../types";
+type MenuRouteOptions = {
+  fetcher: MenuFetcher;
+};
 
 const QuerySchema = z.object({
-  date: z
-    .string()
-    .default(() => formatDate(new Date(), "yyyy-MM-dd"))
-    .transform((s) => parseDate(s, "yyyy-MM-dd", new Date())),
+  date: CalendarDateSchema.optional(),
 });
 
 export function menuRoute({
-  menuID,
-  districtID,
-  cacheDirectory,
-  cacheTTLInMS,
+  fetcher,
 }: MenuRouteOptions): (req: Request, res: Response) => Promise<void> {
   return async (req, res) => {
     const query = QuerySchema.parse(req.query ?? {});
 
     console.error(query);
 
-    const date = query.date ?? new Date();
+    const date = query.date ?? calendarDateFrom(new Date());
 
-    const menu = await loadMenu({
-      districtID,
-      menuID,
-      middleware: [
-        fileSystemCache({
-          cacheDirectory,
-          ttlMS: cacheTTLInMS,
-        }),
-      ],
-    });
+    const menu = await fetcher(date);
 
-    const day = menu.find((d) => isSameDay(d.date, date));
+    const day = menu.find((d) => isSameCalendarDate(d.date, date));
     if (day) {
       res
         .json({
           ...day,
-          date: formatDate(day.date, "yyyy-MM-dd"),
+          date: formatCalendarDate(day.date),
         })
         .end();
       return;
@@ -53,7 +39,7 @@ export function menuRoute({
 
     res
       .json({
-        date: formatDate(date, "yyyy-MM-dd"),
+        date: formatCalendarDate(date),
       })
       .end();
   };
