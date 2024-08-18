@@ -1,10 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
-import {
-  calendarDateFrom,
-  formatCalendarDate,
-  isSameCalendarDate,
-} from "../calendar-dates";
+import { calendarDateFrom, formatCalendarDate } from "../calendar-dates";
+import { getMenuForClosestSchoolDay } from "../menu";
 import { CalendarDateSchema, MenuFetcher } from "../types";
 type MenuRouteOptions = {
   fetcher: MenuFetcher;
@@ -24,22 +21,17 @@ export function menuRoute({
 
     const date = query.date ?? calendarDateFrom(new Date());
 
-    const menu = await fetcher(date);
+    const menu = await getMenuForClosestSchoolDay(date, fetcher);
 
-    const day = menu.find((d) => isSameCalendarDate(d.date, date));
-    if (day) {
-      res
-        .json({
-          ...day,
-          date: formatCalendarDate(day.date),
-        })
-        .end();
+    if (!menu) {
+      res.status(404).end();
       return;
     }
 
     res
       .json({
-        date: formatCalendarDate(date),
+        ...menu,
+        date: formatCalendarDate(menu.date),
       })
       .end();
   };

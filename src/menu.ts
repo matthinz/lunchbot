@@ -1,4 +1,8 @@
-import { formatCalendarMonth } from "./calendar-dates";
+import {
+  addDays,
+  formatCalendarMonth,
+  isSameCalendarDate,
+} from "./calendar-dates";
 import { CalendarDate, MenuCalendarDay, MenuFetcher } from "./types";
 
 type LoadMenuOptions = {
@@ -38,4 +42,32 @@ export async function loadMenu({
   await Promise.all(promisesByMonth.values());
 
   return result;
+}
+
+export async function getMenuForClosestSchoolDay(
+  referenceDate: CalendarDate,
+  fetcher: MenuFetcher,
+): Promise<MenuCalendarDay | undefined> {
+  const daysByMonth: { [key: string]: MenuCalendarDay[] } = {};
+
+  const MAX_FETCHES = 2;
+  let fetchCount = 0;
+
+  while (true) {
+    let days = daysByMonth[formatCalendarMonth(referenceDate)];
+    if (!days) {
+      if (fetchCount >= MAX_FETCHES) {
+        return;
+      }
+      fetchCount += 1;
+      days = daysByMonth[formatCalendarMonth(referenceDate)] =
+        await fetcher(referenceDate);
+    }
+
+    const day = days.find((d) => isSameCalendarDate(d.date, referenceDate));
+    if (day) {
+      return day;
+    }
+    referenceDate = addDays(referenceDate, 1);
+  }
 }

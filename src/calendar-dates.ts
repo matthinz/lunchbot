@@ -1,4 +1,11 @@
+import { addDays as _addDays } from "date-fns";
 import { CalendarDate, CalendarMonth } from "./types";
+
+export function addDays(date: CalendarDate, days: number): CalendarDate {
+  const _date = new Date(date.year, date.month - 1, date.day);
+
+  return calendarDateFrom(_addDays(_date, days));
+}
 
 export function isSameCalendarDate(a: CalendarDate, b: CalendarDate) {
   return a.year === b.year && a.month === b.month && a.day === b.day;
