@@ -1,8 +1,14 @@
 import { Request, Response } from "express";
+import { DocType, h, render } from "h";
 import { z } from "zod";
-import { calendarDateFrom, formatCalendarDate } from "../calendar-dates";
-import { getMenuForClosestSchoolDay } from "../menu";
-import { CalendarDateSchema, MenuFetcher } from "../types";
+import {
+  calendarDateFrom,
+  formatCalendarDate,
+  isSameCalendarDate,
+} from "../calendar-dates";
+import { getMenuForNextSchoolDay } from "../menu";
+import { CalendarDateSchema, MenuCalendarDay, MenuFetcher } from "../types";
+
 type MenuRouteOptions = {
   fetcher: MenuFetcher;
 };
@@ -21,18 +27,72 @@ export function menuRoute({
 
     const date = query.date ?? calendarDateFrom(new Date());
 
-    const menu = await getMenuForClosestSchoolDay(date, fetcher);
+    const menu = await getMenuForNextSchoolDay({
+      referenceDate: date,
+      fetcher,
+      check(day) {
+        return !!day.menu && day.menu?.length > 0;
+      },
+    });
+
+    res.header("cache-control", "no-cache");
 
     if (!menu) {
       res.status(404).end();
       return;
     }
 
+    if (!isSameCalendarDate(menu.date, date)) {
+      res.redirect(`/menu?date=${formatCalendarDate(menu.date)}`);
+      return;
+    }
+
     res
-      .json({
-        ...menu,
-        date: formatCalendarDate(menu.date),
-      })
-      .end();
+      .status(200)
+      .contentType("text/html")
+      .send(render(view(menu)));
   };
+}
+
+function view(menu: MenuCalendarDay) {
+  return [
+    DocType.HTML,
+    h("html", [
+      h("head", [
+        h("meta", { charset: "utf-8" }),
+        h(
+          "meta",
+          {
+            name: "viewport",
+            content: "width=device-width, initial-scale=1",
+          },
+          [],
+        ),
+        h("link", {
+          type: "text/css",
+          rel: "stylesheet",
+          href: "/style.css",
+        }),
+      ]),
+      h("body", [
+        h("h1", formatCalendarDate(menu.date)),
+        menu.note && h("p", menu.note),
+        menu.menu &&
+          h(
+            "ul",
+            menu?.menu.map((i) =>
+              h("li", [
+                i.name,
+                h(
+                  "ul",
+                  i.items.map((item) =>
+                    h("li", "name" in item ? item.name : item.text),
+                  ),
+                ),
+              ]),
+            ),
+          ),
+      ]),
+    ]),
+  ];
 }

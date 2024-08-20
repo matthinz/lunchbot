@@ -108,7 +108,7 @@ function parseMySchoolMenusJSON(json: any): MenuCalendarDay[] {
 
       const date = d.day;
 
-      const categories: MenuCategory[] = [];
+      const menu: MenuCategory[] = [];
       let currentCategory: MenuCategory | undefined;
 
       let note: string | undefined;
@@ -124,7 +124,7 @@ function parseMySchoolMenusJSON(json: any): MenuCalendarDay[] {
               name: i.name,
               items: [],
             };
-            categories.push(currentCategory);
+            menu.push(currentCategory);
             break;
 
           case "text":
@@ -157,7 +157,7 @@ function parseMySchoolMenusJSON(json: any): MenuCalendarDay[] {
       return {
         date,
         note,
-        categories,
+        menu,
       };
     })
     .filter(Boolean) as MenuCalendarDay[];

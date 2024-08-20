@@ -17,6 +17,7 @@
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "h": "https://github.com/matthinz/h.git#98cc5e2",
     "zod": "^3.23.8"
   },
   "scripts": {

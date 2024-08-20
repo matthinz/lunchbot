@@ -53,7 +53,7 @@ export type CalendarMonth = {
 export type MenuCalendarDay = {
   date: CalendarDate;
   note?: string;
-  categories: MenuCategory[];
+  menu?: MenuCategory[];
 };
 
 export type MenuRecipeItem = {

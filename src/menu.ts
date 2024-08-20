@@ -5,49 +5,17 @@ import {
 } from "./calendar-dates";
 import { CalendarDate, MenuCalendarDay, MenuFetcher } from "./types";
 
-type LoadMenuOptions = {
-  dates: CalendarDate[];
+type GetMenuForNextSchoolDayOptions = {
+  referenceDate: CalendarDate;
   fetcher: MenuFetcher;
+  check?: (d: MenuCalendarDay) => boolean;
 };
 
-export async function loadMenu({
-  dates,
+export async function getMenuForNextSchoolDay({
+  referenceDate,
   fetcher,
-}: LoadMenuOptions): Promise<MenuCalendarDay[]> {
-  const promisesByMonth = new Map<string, Promise<MenuCalendarDay[]>>();
-
-  const result = new Array<MenuCalendarDay>(dates.length);
-
-  dates.forEach((date) => {
-    const key = formatCalendarMonth(date);
-    if (!promisesByMonth.has(key)) {
-      promisesByMonth.set(key, fetcher(date));
-    }
-
-    const promise = promisesByMonth.get(key);
-    if (!promise) {
-      throw new Error();
-    }
-
-    promisesByMonth.set(
-      key,
-      promise.then(async (menuDays) => {
-        menuDays.forEach((menuDay) => {});
-
-        return menuDays;
-      }),
-    );
-  });
-
-  await Promise.all(promisesByMonth.values());
-
-  return result;
-}
-
-export async function getMenuForClosestSchoolDay(
-  referenceDate: CalendarDate,
-  fetcher: MenuFetcher,
-): Promise<MenuCalendarDay | undefined> {
+  check,
+}: GetMenuForNextSchoolDayOptions): Promise<MenuCalendarDay | undefined> {
   const daysByMonth: { [key: string]: MenuCalendarDay[] } = {};
 
   const MAX_FETCHES = 2;
@@ -64,7 +32,11 @@ export async function getMenuForClosestSchoolDay(
         await fetcher(referenceDate);
     }
 
-    const day = days.find((d) => isSameCalendarDate(d.date, referenceDate));
+    const day = days.find(
+      (d) =>
+        isSameCalendarDate(d.date, referenceDate) &&
+        (check == null || check(d)),
+    );
     if (day) {
       return day;
     }

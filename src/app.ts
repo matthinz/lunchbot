@@ -1,4 +1,5 @@
 import express, { Request, Response } from "express";
+import path from "node:path";
 import { createFileSystemCacheMiddleware, createHttpGetter } from "./http";
 import { createMySchoolMenusFetcher } from "./my-school-menus";
 import { menuRoute } from "./routes/menu";
@@ -19,6 +20,8 @@ export function createApp(options: AppOptions): { start: () => Promise<void> } {
       ],
     }),
   });
+
+  app.use(express.static(path.join(__dirname, "../public")));
 
   app.get("/menu", asyncRouteHandler(menuRoute({ ...options, fetcher })));
 
