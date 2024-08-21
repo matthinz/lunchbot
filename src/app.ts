@@ -25,7 +25,12 @@ export function createApp(options: AppOptions): { start: () => Promise<void> } {
 
   app.get("/menu", asyncRouteHandler(menuRoute({ ...options, fetcher })));
 
-  app.use("/slack/lunch", express.urlencoded());
+  app.use(
+    "/slack/lunch",
+    express.urlencoded({
+      extended: false,
+    }),
+  );
   app.post(
     "/slack/lunch",
     asyncRouteHandler(slashCommand({ ...options, fetcher })),

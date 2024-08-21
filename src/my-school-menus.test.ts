@@ -1,13 +1,17 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { z, ZodError, ZodIssueCode } from "zod";
-import { ResponseSchema } from "./my-school-menus";
+import { parseMySchoolMenusJSON, ResponseSchema } from "./my-school-menus";
+
+async function loadFixture(file: string) {
+  return JSON.parse(
+    await readFile(path.join(__dirname, `../fixtures/${file}`), "utf-8"),
+  );
+}
 
 describe("ResponseSchema", () => {
   async function loadAndParseFixture(file: string) {
-    const json = JSON.parse(
-      await readFile(path.join(__dirname, `../fixtures/${file}`), "utf-8"),
-    );
+    const json = await loadFixture(file);
     try {
       return ResponseSchema.parse(json);
     } catch (err) {
@@ -18,7 +22,6 @@ describe("ResponseSchema", () => {
       throw err;
     }
   }
-
   describe("August", () => {
     let parsed: z.infer<typeof ResponseSchema>;
 
@@ -372,6 +375,79 @@ describe("ResponseSchema", () => {
     });
 
     it("parses successfully", () => {});
+  });
+});
+
+describe("#parseMySchoolMenusJson", () => {
+  it("condenses things down", async () => {
+    const menu = parseMySchoolMenusJSON(await loadFixture("august.json"));
+    expect(menu).toBeTruthy();
+
+    const day = menu.find(({ date: { day } }) => day === 29);
+
+    console.log(JSON.stringify(day, null, 2));
+
+    expect(day).toEqual({
+      date: {
+        year: 2024,
+        month: 8,
+        day: 29,
+      },
+      menu: [
+        {
+          name: "Lunch Entree",
+          items: [
+            { name: "Pizza, Cheese, 10-cut, Wild Mike's" },
+            { name: "Wowbutter and Grape Jelly EZ Jammer Sandwich" },
+            {
+              name: "Bagel (Protein Options - Served with Bagel)",
+            },
+          ],
+        },
+        {
+          name: "Vegetables",
+          items: [
+            {
+              name: "Early Release Salad Bar",
+            },
+          ],
+        },
+        {
+          name: "Fruit",
+          items: [
+            {
+              name: "Fruit, Rotating Selection",
+            },
+            {
+              name: "Dried Fruit, Rotating Selection",
+            },
+          ],
+        },
+        {
+          name: "Milk",
+          items: [
+            {
+              name: "1% Milk",
+            },
+
+            {
+              name: "Nonfat Milk",
+            },
+          ],
+        },
+        {
+          name: "Misc.",
+          items: [
+            {
+              name: "Sunflower Seeds, Honey Roasted",
+            },
+            {
+              name: "Misc. Salad Bar Items, As Available",
+            },
+          ],
+        },
+      ],
+    });
   });
 });
 

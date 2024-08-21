@@ -5,7 +5,9 @@ import {
   parseCalendarDate,
 } from "./calendar-dates";
 import { HttpGetter } from "./http";
-import { MenuCalendarDay, MenuCategory, MenuFetcher } from "./types";
+import { MenuCalendarDay, MenuCategory, MenuFetcher, MenuItem } from "./types";
+
+const TEXT_TO_IGNORE = ["Choice of", "Or"];
 
 type CreateMySchoolMenusFetcherOptions = {
   httpGetter: HttpGetter;
@@ -93,7 +95,7 @@ export function createMySchoolMenusFetcher({
   };
 }
 
-function parseMySchoolMenusJSON(json: any): MenuCalendarDay[] {
+export function parseMySchoolMenusJSON(json: any): MenuCalendarDay[] {
   const parsed = ResponseSchema.parse(json);
 
   return parsed.data.menu_month_calendar
@@ -133,9 +135,13 @@ function parseMySchoolMenusJSON(json: any): MenuCalendarDay[] {
                 `text item ${JSON.stringify(i.name)} without category`,
               );
             }
-            currentCategory.items.push({
-              text: i.name,
-            });
+
+            if (!TEXT_TO_IGNORE.includes(i.name)) {
+              currentCategory.items.push({
+                text: i.name,
+              });
+            }
+
             break;
 
           case "recipe":
@@ -144,9 +150,12 @@ function parseMySchoolMenusJSON(json: any): MenuCalendarDay[] {
                 `recipe item ${JSON.stringify(i.name)} without category`,
               );
             }
-            currentCategory.items.push({
-              name: i.name,
-            });
+
+            if (!augmentExistingItem(i, currentCategory.items)) {
+              currentCategory.items.push({
+                name: i.name,
+              });
+            }
             break;
 
           default:
@@ -161,4 +170,40 @@ function parseMySchoolMenusJSON(json: any): MenuCalendarDay[] {
       };
     })
     .filter(Boolean) as MenuCalendarDay[];
+}
+
+function augmentExistingItem(
+  rawItem: {
+    type: string;
+    item: string | number;
+    name: string;
+    weight: number;
+  },
+  otherItems: MenuItem[],
+): boolean {
+  const SERVED_WITH = /Served with (.+)/;
+
+  const parts = rawItem.name.split("-").map((token) => token.trim());
+  const matches = parts
+    .map((p) => SERVED_WITH.exec(p))
+    .filter(Boolean) as RegExpExecArray[];
+
+  if (matches.length !== 1) {
+    return false;
+  }
+
+  const m = matches[0];
+
+  const otherItemName = m[1];
+
+  const otherItem = otherItems.find(
+    (i) => "name" in i && i.name.includes(otherItemName),
+  );
+
+  if (!otherItem || !("name" in otherItem)) {
+    return false;
+  }
+
+  otherItem.name = `${otherItemName} (${rawItem.name})`;
+  return true;
 }
