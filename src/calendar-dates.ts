@@ -1,5 +1,12 @@
 import { addDays as _addDays } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { CalendarDate, CalendarMonth } from "./types";
+
+const FORMAT_STRINGS = {
+  year: "y",
+  month: "m",
+  day: "d",
+} as const;
 
 export function addDays(date: CalendarDate, days: number): CalendarDate {
   const _date = new Date(date.year, date.month - 1, date.day);
@@ -7,11 +14,53 @@ export function addDays(date: CalendarDate, days: number): CalendarDate {
   return calendarDateFrom(_addDays(_date, days));
 }
 
-export function isSameCalendarDate(a: CalendarDate, b: CalendarDate) {
-  return a.year === b.year && a.month === b.month && a.day === b.day;
+export function calendarDateToDate(
+  { year, month, day }: CalendarDate,
+  timezone: string,
+) {
+  const date = new Date(year, month, day);
 }
 
-export function calendarDateFrom(date: Date): CalendarDate {
+export function compareCalendarDates(a: CalendarDate, b: CalendarDate): number {
+  const FIELDS = ["year", "month", "day"] as const;
+
+  for (const f of FIELDS) {
+    if (a[f] < b[f]) {
+      return -1;
+    } else if (a[f] > b[f]) {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+export function isSameCalendarDate(a: CalendarDate, b: CalendarDate) {
+  return compareCalendarDates(a, b) === 0;
+}
+
+export function isDayBefore(
+  date: CalendarDate,
+  referenceDate: CalendarDate,
+): boolean {
+  const dayBefore = calendarDateFrom(
+    new Date(
+      referenceDate.year,
+      referenceDate.month - 1,
+      referenceDate.day - 1,
+    ),
+  );
+  return isSameCalendarDate(date, dayBefore);
+}
+
+export function calendarDateFrom(date: Date, timezone?: string): CalendarDate {
+  if (timezone) {
+    const year = parseInt(formatInTimeZone(date, "y", timezone), 10);
+    const month = parseInt(formatInTimeZone(date, "M", timezone), 10);
+    const day = parseInt(formatInTimeZone(date, "d", timezone), 10);
+    return { year, month, day };
+  }
+
   return {
     year: date.getFullYear(),
     month: date.getMonth() + 1,

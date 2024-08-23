@@ -1,98 +1,105 @@
 import { Request, Response } from "express";
-import { DocType, h, render } from "h";
-import { z } from "zod";
-import {
-  calendarDateFrom,
-  formatCalendarDate,
-  isSameCalendarDate,
-} from "../calendar-dates";
-import { getMenuForNextSchoolDay } from "../menu";
-import { CalendarDateSchema, MenuCalendarDay, MenuFetcher } from "../types";
+import { DocType, render, TAGS } from "h";
+import { formatCalendarDate } from "../calendar-dates";
+import { getMenusForDates } from "../menu";
+import { getWeekDays, WeekDay } from "../time-thinker";
+import { MenuCategory, MenuFetcher } from "../types";
 
 type MenuRouteOptions = {
   fetcher: MenuFetcher;
+  timezone: string;
 };
 
-const QuerySchema = z.object({
-  date: CalendarDateSchema.optional(),
-});
+type WeekDayWithMenu = WeekDay & {
+  menu: MenuCategory[] | undefined;
+  note: string | undefined;
+};
 
 export function menuRoute({
   fetcher,
+  timezone,
 }: MenuRouteOptions): (req: Request, res: Response) => Promise<void> {
   return async (req, res) => {
-    const query = QuerySchema.parse(req.query ?? {});
+    const rawDate = (req.query ?? {}).date;
+    let referenceDate: Date;
 
-    console.error(query);
+    if (!rawDate) {
+      referenceDate = new Date();
+    } else if (typeof rawDate !== "string") {
+      res.status(400).end();
+      return;
+    } else {
+      referenceDate = new Date(rawDate);
+      if (isNaN(referenceDate as unknown as number)) {
+        res.status(400).end();
+        return;
+      }
+    }
 
-    const date = query.date ?? calendarDateFrom(new Date());
-
-    const menu = await getMenuForNextSchoolDay({
-      referenceDate: date,
-      fetcher,
-      check(day) {
-        return !!day.menu && day.menu?.length > 0;
-      },
+    const weekdays = getWeekDays({
+      referenceDate,
+      timezone,
     });
 
     res.header("cache-control", "no-cache");
 
-    if (!menu) {
-      res.status(404).end();
-      return;
-    }
+    const menus = await getMenusForDates({
+      dates: weekdays.map(({ date }) => date),
+      fetcher,
+    });
 
-    if (!isSameCalendarDate(menu.date, date)) {
-      res.redirect(`/menu?date=${formatCalendarDate(menu.date)}`);
-      return;
-    }
+    const days = weekdays.map((weekday, i) => ({
+      ...weekday,
+      menu: menus[i]?.menu,
+      note: menus[i]?.note,
+    }));
 
     res
       .status(200)
       .contentType("text/html")
-      .send(render(view(menu)));
+      .send(render(view(days)));
   };
 }
 
-function view(menu: MenuCalendarDay) {
+function view(days: WeekDayWithMenu[]) {
+  const { html, head, h2, meta, link, body, article, p, ul, li } = TAGS;
+
   return [
     DocType.HTML,
-    h("html", [
-      h("head", [
-        h("meta", { charset: "utf-8" }),
-        h(
-          "meta",
-          {
-            name: "viewport",
-            content: "width=device-width, initial-scale=1",
-          },
-          [],
-        ),
-        h("link", {
+    html([
+      head([
+        meta({ charset: "utf-8" }),
+        meta({
+          name: "viewport",
+          content: "width=device-width, initial-scale=1",
+        }),
+        link({
           type: "text/css",
           rel: "stylesheet",
           href: "/style.css",
         }),
       ]),
-      h("body", [
-        h("h1", formatCalendarDate(menu.date)),
-        menu.note && h("p", menu.note),
-        menu.menu &&
-          h(
-            "ul",
-            menu?.menu.map((i) =>
-              h("li", [
-                i.name,
-                h(
-                  "ul",
-                  i.items.map((item) =>
-                    h("li", "name" in item ? item.name : item.text),
-                  ),
+      body(
+        days.map((day) =>
+          article([
+            h2(formatCalendarDate(day.date)),
+            day.note && p(day.note),
+            day.menu &&
+              ul(
+                day.menu.map((i) =>
+                  li([
+                    i.name,
+                    ul(
+                      i.items.map((item) =>
+                        li("name" in item ? item.name : item.text),
+                      ),
+                    ),
+                  ]),
                 ),
-              ]),
-            ),
-          ),
-      ]),
+              ),
+          ]),
+        ),
+      ),
     ]),
   ];
 }

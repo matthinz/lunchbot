@@ -15,9 +15,10 @@
   },
   "dependencies": {
     "date-fns": "^3.6.0",
+    "date-fns-tz": "^3.1.3",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "h": "https://github.com/matthinz/h.git#43f4d2c",
+    "h": "https://github.com/matthinz/h.git#35c1d20",
     "zod": "^3.23.8"
   },
   "scripts": {

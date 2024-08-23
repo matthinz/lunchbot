@@ -1048,6 +1048,11 @@ cross-spawn@^7.0.3:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
+date-fns-tz@^3.1.3:
+  version "3.1.3"
+  resolved "https://registry.yarnpkg.com/date-fns-tz/-/date-fns-tz-3.1.3.tgz#643dfc7157008a3873cd717973e4074bb802f962"
+  integrity sha512-ZfbMu+nbzW0mEzC8VZrLiSWvUIaI3aRHeq33mTe7Y38UctKukgqPR4nTDwcwS4d64Gf8GghnVsroBuMY3eiTeA==
+
 date-fns@^3.6.0:
   version "3.6.0"
   resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-3.6.0.tgz#f20ca4fe94f8b754951b24240676e8618c0206bf"
@@ -1378,9 +1383,9 @@ graceful-fs@^4.2.9:
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.11.tgz#4183e4e8bf08bb6e05bbb2f7d2e0c8f712ca40e3"
   integrity sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==
 
-"h@https://github.com/matthinz/h.git#43f4d2c":
+"h@https://github.com/matthinz/h.git#35c1d20":
   version "1.0.0"
-  resolved "https://github.com/matthinz/h.git#43f4d2c432462138f1848e814a1f3bd0963874bf"
+  resolved "https://github.com/matthinz/h.git#35c1d2005e5d00026c5e04b8323cdd99dcd39da2"
 
 has-flag@^3.0.0:
   version "3.0.0"

@@ -1,45 +1,38 @@
-import {
-  addDays,
-  formatCalendarMonth,
-  isSameCalendarDate,
-} from "./calendar-dates";
+import { formatCalendarMonth, isSameCalendarDate } from "./calendar-dates";
 import { CalendarDate, MenuCalendarDay, MenuFetcher } from "./types";
 
-type GetMenuForNextSchoolDayOptions = {
-  referenceDate: CalendarDate;
+type GetMenusForDatesOptions = {
+  dates: CalendarDate[];
   fetcher: MenuFetcher;
-  check?: (d: MenuCalendarDay) => boolean;
 };
 
-export async function getMenuForNextSchoolDay({
-  referenceDate,
+type PromiseOfArrayOfOptionalDays = Promise<(MenuCalendarDay | undefined)[]>;
+
+export async function getMenusForDates({
+  dates,
   fetcher,
-  check,
-}: GetMenuForNextSchoolDayOptions): Promise<MenuCalendarDay | undefined> {
+}: GetMenusForDatesOptions): PromiseOfArrayOfOptionalDays {
   const daysByMonth: { [key: string]: MenuCalendarDay[] } = {};
 
-  const MAX_FETCHES = 2;
-  let fetchCount = 0;
+  return dates.reduce<PromiseOfArrayOfOptionalDays>(
+    (promise, date) =>
+      promise.then(async (result) => {
+        const key = formatCalendarMonth(date);
 
-  while (true) {
-    let days = daysByMonth[formatCalendarMonth(referenceDate)];
-    if (!days) {
-      if (fetchCount >= MAX_FETCHES) {
-        return;
-      }
-      fetchCount += 1;
-      days = daysByMonth[formatCalendarMonth(referenceDate)] =
-        await fetcher(referenceDate);
-    }
+        let day = daysByMonth[key]?.find((d) =>
+          isSameCalendarDate(d.date, date),
+        );
 
-    const day = days.find(
-      (d) =>
-        isSameCalendarDate(d.date, referenceDate) &&
-        (check == null || check(d)),
-    );
-    if (day) {
-      return day;
-    }
-    referenceDate = addDays(referenceDate, 1);
-  }
+        if (!day) {
+          // Need to do a fetch
+          daysByMonth[key] = await fetcher(date);
+          day = daysByMonth[key]?.find((d) => isSameCalendarDate(d.date, date));
+        }
+
+        result.push(day);
+
+        return result;
+      }),
+    Promise.resolve([]),
+  );
 }

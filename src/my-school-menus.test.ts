@@ -385,8 +385,6 @@ describe("#parseMySchoolMenusJson", () => {
 
     const day = menu.find(({ date: { day } }) => day === 29);
 
-    console.log(JSON.stringify(day, null, 2));
-
     expect(day).toEqual({
       date: {
         year: 2024,
