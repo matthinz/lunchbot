@@ -3,7 +3,7 @@ import { DocType, render, TAGS } from "h";
 import { formatCalendarDate } from "../calendar-dates";
 import { getMenusForDates } from "../menu";
 import { getWeekDays, WeekDay } from "../time-thinker";
-import { MenuCategory, MenuFetcher } from "../types";
+import { MenuCategory, MenuFetcher, MenuItem } from "../types";
 
 type MenuRouteOptions = {
   fetcher: MenuFetcher;
@@ -70,6 +70,10 @@ function view(days: WeekDayWithMenu[]) {
       head([
         meta({ charset: "utf-8" }),
         meta({
+          name: "robots",
+          content: "noindex",
+        }),
+        meta({
           name: "viewport",
           content: "width=device-width, initial-scale=1",
         }),
@@ -91,7 +95,19 @@ function view(days: WeekDayWithMenu[]) {
                     i.name,
                     ul(
                       i.items.map((item) =>
-                        li("name" in item ? item.name : item.text),
+                        li(
+                          {
+                            class: {
+                              "menu-item": true,
+                              interesting: isInteresting(item),
+                            },
+                            data: {
+                              interestingness:
+                                "name" in item && item.interestingness,
+                            },
+                          },
+                          "name" in item ? item.name : item.text,
+                        ),
                       ),
                     ),
                   ]),
@@ -102,4 +118,8 @@ function view(days: WeekDayWithMenu[]) {
       ),
     ]),
   ];
+}
+
+function isInteresting(item: MenuItem): boolean {
+  return "name" in item && item.interestingness > 0.75;
 }

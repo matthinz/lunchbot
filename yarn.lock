@@ -1383,9 +1383,9 @@ graceful-fs@^4.2.9:
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.11.tgz#4183e4e8bf08bb6e05bbb2f7d2e0c8f712ca40e3"
   integrity sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==
 
-"h@https://github.com/matthinz/h.git#35c1d20":
+"h@https://github.com/matthinz/h.git#e98a014":
   version "1.0.0"
-  resolved "https://github.com/matthinz/h.git#35c1d2005e5d00026c5e04b8323cdd99dcd39da2"
+  resolved "https://github.com/matthinz/h.git#e98a0141fd4b0b5d7942e8cd19a0a6afac951f1b"
 
 has-flag@^3.0.0:
   version "3.0.0"

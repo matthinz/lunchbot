@@ -5,7 +5,13 @@ import {
   parseCalendarDate,
 } from "./calendar-dates";
 import { HttpGetter } from "./http";
-import { MenuCalendarDay, MenuCategory, MenuFetcher, MenuItem } from "./types";
+import {
+  MenuCalendarDay,
+  MenuCategory,
+  MenuFetcher,
+  MenuItem,
+  MenuRecipeItem,
+} from "./types";
 
 const TEXT_TO_IGNORE = ["Choice of", "Or"];
 
@@ -98,7 +104,7 @@ export function createMySchoolMenusFetcher({
 export function parseMySchoolMenusJSON(json: any): MenuCalendarDay[] {
   const parsed = ResponseSchema.parse(json);
 
-  return parsed.data.menu_month_calendar
+  const menuCalendarDays = parsed.data.menu_month_calendar
     .map((d) => {
       if (d == null) {
         return;
@@ -154,6 +160,7 @@ export function parseMySchoolMenusJSON(json: any): MenuCalendarDay[] {
             if (!augmentExistingItem(i, currentCategory.items)) {
               currentCategory.items.push({
                 name: i.name,
+                interestingness: 0,
               });
             }
             break;
@@ -170,6 +177,53 @@ export function parseMySchoolMenusJSON(json: any): MenuCalendarDay[] {
       };
     })
     .filter(Boolean) as MenuCalendarDay[];
+
+  // Now we want to score each menu item on "interestingness". This will just
+  // be (1 - % of days that have this item)
+
+  const menuItemCounts: { [key: string]: number } = {};
+
+  forEachMenuItem(menuCalendarDays, (item, category) => {
+    const key = [category.name, item.name].join("|");
+    menuItemCounts[key] = menuItemCounts[key] ?? 0;
+    menuItemCounts[key] += 1;
+  });
+
+  const countOfDaysWithMenus = menuCalendarDays.filter((d) => d.menu).length;
+
+  if (countOfDaysWithMenus > 0) {
+    forEachMenuItem(menuCalendarDays, (item, category) => {
+      const key = [category.name, item.name].join("|");
+
+      item.interestingness =
+        1 - menuItemCounts[key] / (countOfDaysWithMenus * 1.0);
+
+      console.error({
+        key,
+        menuItemCount: menuItemCounts[key],
+        countOfDaysWithMenus,
+
+        ...item,
+      });
+    });
+  }
+
+  return menuCalendarDays;
+
+  function forEachMenuItem(
+    days: MenuCalendarDay[],
+    callback: (item: MenuRecipeItem, category: MenuCategory) => void,
+  ) {
+    days.forEach((day) => {
+      day.menu?.forEach((category) => {
+        category.items.forEach((item) => {
+          if ("name" in item) {
+            callback(item, category);
+          }
+        });
+      });
+    });
+  }
 }
 
 function augmentExistingItem(

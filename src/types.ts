@@ -61,6 +61,7 @@ export type MenuCalendarDay = {
 
 export type MenuRecipeItem = {
   name: string;
+  interestingness: number;
 };
 
 export type MenuTextItem = {
