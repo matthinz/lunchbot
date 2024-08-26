@@ -19,7 +19,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "feed": "^4.2.2",
-    "h": "https://github.com/matthinz/h.git#e98a014",
+    "h": "https://github.com/matthinz/h.git#96a8772",
     "zod": "^3.23.8"
   },
   "scripts": {

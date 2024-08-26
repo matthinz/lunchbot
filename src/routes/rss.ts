@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { Feed } from "feed";
-import { Node, render, TAGS } from "h";
+import { Node, renderMarkdown, TAGS } from "h";
 import { formatCalendarDate } from "../calendar-dates";
 import { getMenusForDates } from "../menu";
 import { getWeekDays, WeekDay } from "../time-thinker";
@@ -61,7 +61,7 @@ function renderRss(days: MenuCalendarDayEx[]): string {
     title,
     description: "",
     id: `menu-${formatCalendarDate(days[0].date)}`,
-    content: render(buildContent(days)),
+    content: renderMarkdown(buildContent(days)),
   });
   return feed.rss2();
 }
