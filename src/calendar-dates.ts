@@ -1,5 +1,5 @@
 import { addDays as _addDays } from "date-fns";
-import { formatInTimeZone } from "date-fns-tz";
+import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { CalendarDate, CalendarMonth } from "./types";
 
 const FORMAT_STRINGS = {
@@ -14,11 +14,21 @@ export function addDays(date: CalendarDate, days: number): CalendarDate {
   return calendarDateFrom(_addDays(_date, days));
 }
 
+type CalendarDateToDateOptions = {
+  hour?: number;
+  minute?: number;
+  seconds?: number;
+  timezone: string;
+};
+
 export function calendarDateToDate(
   { year, month, day }: CalendarDate,
-  timezone: string,
+  { hour, minute, seconds, timezone }: CalendarDateToDateOptions,
 ) {
-  const date = new Date(year, month, day);
+  return fromZonedTime(
+    new Date(year, month - 1, day, hour ?? 0, minute ?? 0, seconds ?? 0),
+    timezone,
+  );
 }
 
 export function compareCalendarDates(a: CalendarDate, b: CalendarDate): number {

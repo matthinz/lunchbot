@@ -16,6 +16,11 @@ export const AppOptionsSchema = z
     LUNCH_BOT_MENU_ID: z.coerce.number().int(),
     LUNCH_BOT_SLACK_VERIFICATION_TOKEN: z.string().optional(),
     LUNCH_BOT_TIMEZONE: z.string(),
+    LUNCH_BOT_URL: z
+      .string()
+      .url()
+      .transform((url) => new URL(url))
+      .optional(),
     PORT: z.coerce.number().int().default(DEFAULT_PORT),
   })
   .transform(
@@ -26,6 +31,7 @@ export const AppOptionsSchema = z
       LUNCH_BOT_MENU_ID: menuID,
       LUNCH_BOT_SLACK_VERIFICATION_TOKEN: slackVerificationToken,
       LUNCH_BOT_TIMEZONE: timezone,
+      LUNCH_BOT_URL: url,
       PORT: port,
     }) => ({
       cacheTTLInMS,
@@ -35,8 +41,13 @@ export const AppOptionsSchema = z
       port,
       slackVerificationToken,
       timezone,
+      url,
     }),
-  );
+  )
+  .transform((values) => ({
+    ...values,
+    url: values.url ?? new URL(`http://localhost:${values.port}`),
+  }));
 
 export type AppOptions = z.infer<typeof AppOptionsSchema>;
 

@@ -1,7 +1,8 @@
+import { addDays } from "date-fns";
 import { Request, Response } from "express";
 import { Feed } from "feed";
 import { Node, renderMarkdown, TAGS } from "h";
-import { formatCalendarDate } from "../calendar-dates";
+import { calendarDateToDate, formatCalendarDate } from "../calendar-dates";
 import { getMenusForDates } from "../menu";
 import { getWeekDays, WeekDay } from "../time-thinker";
 import { MenuCategory, MenuFetcher, MenuRecipeItem } from "../types";
@@ -9,11 +10,17 @@ import { MenuCategory, MenuFetcher, MenuRecipeItem } from "../types";
 type MenuRssRouteOptions = {
   fetcher: MenuFetcher;
   timezone: string;
+  url: URL;
+  menuID: number;
+  districtID: number;
 };
 
 export function menuRssRoute({
+  districtID,
   fetcher,
+  menuID,
   timezone,
+  url,
 }: MenuRssRouteOptions): (req: Request, res: Response) => Promise<void> {
   return async (req, res) => {
     const days = getWeekDays({
@@ -29,13 +36,17 @@ export function menuRssRoute({
     res
       .contentType("text/xml")
       .send(
-        renderRss(
-          days.map((d, i) => ({
+        renderRss({
+          menuID,
+          districtID,
+          timezone,
+          url,
+          days: days.map((d, i) => ({
             menu: [],
             ...d,
             ...(menus[i] ?? {}),
           })),
-        ),
+        }),
       )
       .end();
   };
@@ -46,23 +57,54 @@ type MenuCalendarDayEx = WeekDay & {
   note?: string;
 };
 
-function renderRss(days: MenuCalendarDayEx[]): string {
-  const title = `Menu for the week of ${formatCalendarDate(days[0].date)}`;
+type RenderRssOptions = {
+  days: MenuCalendarDayEx[];
+  districtID: number;
+  menuID: number;
+  timezone: string;
+  url: URL;
+};
+
+function renderRss({
+  days,
+  url,
+  timezone,
+  menuID,
+  districtID,
+}: RenderRssOptions): string {
+  const firstDay = days[0].date;
+  const niceFirstDay = formatCalendarDate(firstDay);
+  const title = `Menu for the week of ${niceFirstDay}`;
+  const link = new URL(`/menu?date=${niceFirstDay}`, url).toString();
+
+  // Go to 10 AM the day before the first day
+  const date = addDays(
+    calendarDateToDate(firstDay, {
+      hour: 10,
+      minute: 0,
+      seconds: 0,
+      timezone: timezone,
+    }),
+    -1,
+  );
 
   const feed = new Feed({
     id: "menu",
     title: "Menu",
+    description: "School lunch menus",
+    link: url.toString(),
     copyright: "",
   });
 
   feed.addItem({
-    date: new Date(),
-    link: "",
+    date,
+    link,
     title,
-    description: "",
-    id: `menu-${formatCalendarDate(days[0].date)}`,
+    description: `School lunch menu for the week of ${niceFirstDay}`,
+    id: `menu-${districtID}-${menuID}-${niceFirstDay}`,
     content: renderMarkdown(buildContent(days)),
   });
+
   return feed.rss2();
 }
 
