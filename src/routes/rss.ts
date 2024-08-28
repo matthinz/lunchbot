@@ -121,15 +121,17 @@ function buildContent(menus: DailyMenu[]): Node {
         ? `${formatCalendarDate(menu.date)}`
         : `${formatCalendarDate(menu.date)} (${menu.note})`;
 
-    const items = interestingItems(menu.categories);
-
-    if (items.length === 0) {
+    if (menu.categories.length === 0) {
       if (menu.note == null) {
         return;
       } else {
         return li(prefix);
       }
-    } else if (items.length === 1) {
+    }
+
+    const items = interestingItems(menu.categories);
+
+    if (items.length === 1) {
       return li(`${prefix}: ${items[0][1].name}`);
     } else {
       return li([
@@ -157,12 +159,11 @@ function interestingItems(
 ): [MenuCategory, MenuRecipeItem][] {
   return categories.reduce<[MenuCategory, MenuRecipeItem][]>(
     (result, category) => {
-      category.items
-        .filter((item) => "name" in item && item.interestingness >= threshold)
-        .forEach((item) => {
-          result.push([category, item as MenuRecipeItem]);
-        });
-
+      category.items.forEach((item) => {
+        if ("name" in item && item.interestingness >= threshold) {
+          result.push([category, item]);
+        }
+      });
       return result;
     },
     [],

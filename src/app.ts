@@ -36,7 +36,7 @@ export function createApp(options: AppOptions): { start: () => Promise<void> } {
   app.get("/menus/:district/:menu", asyncRouteHandler(menuRoute(options)));
 
   app.get(
-    "/menu/:district/:menu/rss",
+    "/menus/:district/:menu/rss",
     asyncRouteHandler(menuRssRoute(options)),
   );
 
