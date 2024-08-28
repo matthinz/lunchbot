@@ -11,8 +11,8 @@ type MenuRouteOptions = {
 };
 
 type WeekDayWithMenu = WeekDay & {
-  menu: MenuCategory[] | undefined;
-  note: string | undefined;
+  categories: MenuCategory[];
+  note?: string;
 };
 
 export function menuRoute({
@@ -44,8 +44,6 @@ export function menuRoute({
 
     const { fetcher } = districtAndMenuForRequest(req);
 
-    console.error(districtAndMenuForRequest(req));
-
     const menus = await getMenusForDates({
       dates: weekdays.map(({ date }) => date),
       fetcher,
@@ -53,7 +51,7 @@ export function menuRoute({
 
     const days = weekdays.map((weekday, i) => ({
       ...weekday,
-      menu: menus[i]?.menu,
+      categories: menus[i]?.categories ?? [],
       note: menus[i]?.note,
     }));
 
@@ -91,13 +89,13 @@ function view(days: WeekDayWithMenu[]) {
           article([
             h2(formatCalendarDate(day.date)),
             day.note && p(day.note),
-            day.menu &&
+            day.categories.length > 0 &&
               ul(
-                day.menu.map((i) =>
+                day.categories.map((category) =>
                   li([
-                    i.name,
+                    category.name,
                     ul(
-                      i.items.map((item) =>
+                      category.items.map((item) =>
                         li(
                           {
                             class: {

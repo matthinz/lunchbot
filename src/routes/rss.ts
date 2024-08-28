@@ -6,7 +6,7 @@ import { calendarDateToDate, formatCalendarDate } from "../calendar-dates";
 import { getMenusForDates } from "../menu";
 import { districtAndMenuForRequest } from "../middleware/district-menu";
 import { getWeekDays, WeekDay } from "../time-thinker";
-import { MenuCategory, MenuRecipeItem } from "../types";
+import { Menu, MenuCategory, MenuRecipeItem } from "../types";
 
 type MenuRssRouteOptions = {
   timezone: string;
@@ -38,10 +38,10 @@ export function menuRssRoute({
           districtID,
           timezone,
           url,
-          days: days.map((d, i) => ({
-            menu: [],
-            ...d,
-            ...(menus[i] ?? {}),
+          menus: menus.map((menu, i) => ({
+            categories: [],
+            ...days[i],
+            ...(menu ?? {}),
           })),
         }),
       )
@@ -49,13 +49,10 @@ export function menuRssRoute({
   };
 }
 
-type MenuCalendarDayEx = WeekDay & {
-  menu: MenuCategory[];
-  note?: string;
-};
+type DailyMenu = WeekDay & Menu;
 
 type RenderRssOptions = {
-  days: MenuCalendarDayEx[];
+  menus: DailyMenu[];
   districtID: number;
   menuID: number;
   timezone: string;
@@ -63,13 +60,13 @@ type RenderRssOptions = {
 };
 
 function renderRss({
-  days,
+  menus,
   url,
   timezone,
   menuID,
   districtID,
 }: RenderRssOptions): string {
-  const firstDay = days[0].date;
+  const firstDay = menus[0].date;
   const niceFirstDay = formatCalendarDate(firstDay);
   const title = `Menu for the week of ${niceFirstDay}`;
   const link = new URL(`/menu?date=${niceFirstDay}`, url).toString();
@@ -99,36 +96,35 @@ function renderRss({
     title,
     description: `School lunch menu for the week of ${niceFirstDay}`,
     id: `menu-${districtID}-${menuID}-${niceFirstDay}`,
-    content: renderMarkdown(buildContent(days)),
+    content: renderMarkdown(buildContent(menus)),
   });
 
   return feed.rss2();
 }
 
-function buildContent(days: MenuCalendarDayEx[]): Node {
+function buildContent(menus: DailyMenu[]): Node {
   const { ul, li } = TAGS;
 
-  return ul(days.map(liForDay));
+  return ul(menus.map(liForDay));
 
-  function liForDay(day: MenuCalendarDayEx): Node {
-    if (day.menu.length === 0) {
-      if (day.note == null) {
+  function liForDay(menu: DailyMenu): Node {
+    if (menu.categories.length === 0) {
+      if (menu.note == null) {
         return;
       } else {
-        return li(`${formatCalendarDate(day.date)}: ${day.note}`);
+        return li(`${formatCalendarDate(menu.date)}: ${menu.note}`);
       }
     }
+
     const prefix =
-      day.note == null
-        ? `${formatCalendarDate(day.date)}`
-        : `${formatCalendarDate(day.date)} (${day.note})`;
+      menu.note == null
+        ? `${formatCalendarDate(menu.date)}`
+        : `${formatCalendarDate(menu.date)} (${menu.note})`;
 
-    const items = interestingItems(day.menu);
-
-    console.log(items);
+    const items = interestingItems(menu.categories);
 
     if (items.length === 0) {
-      if (day.note == null) {
+      if (menu.note == null) {
         return;
       } else {
         return li(prefix);
@@ -139,7 +135,7 @@ function buildContent(days: MenuCalendarDayEx[]): Node {
       return li([
         `${prefix}:`,
         ul(
-          day.menu.map((category) =>
+          menu.categories.map((category) =>
             li([
               category.name,
               ul(

@@ -5,9 +5,7 @@ import { districtMenuMiddleware } from "./middleware/district-menu";
 import { createMySchoolMenusFetcher } from "./my-school-menus";
 import { menuRoute } from "./routes/menu";
 import { menuRssRoute } from "./routes/rss";
-import { AppOptions, MenuFetcher } from "./types";
-
-type FetcherFactory = (districtID: number, menuID: number) => MenuFetcher;
+import { AppOptions } from "./types";
 
 export function createApp(options: AppOptions): { start: () => Promise<void> } {
   const app = express();

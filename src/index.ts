@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 import { createApp } from "./app";
-import { AppOptionsSchema } from "./types";
+import { AppOptionsSchema } from "./schemas";
 
 config();
 

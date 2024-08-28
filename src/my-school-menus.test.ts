@@ -391,14 +391,21 @@ describe("#parseMySchoolMenusJson", () => {
         month: 8,
         day: 29,
       },
-      menu: [
+      categories: [
         {
           name: "Lunch Entree",
           items: [
-            { name: "Pizza, Cheese, 10-cut, Wild Mike's" },
-            { name: "Wowbutter and Grape Jelly EZ Jammer Sandwich" },
+            {
+              name: "Pizza, Cheese, 10-cut, Wild Mike's",
+              interestingness: 0.5,
+            },
+            {
+              name: "Wowbutter and Grape Jelly EZ Jammer Sandwich",
+              interestingness: 0,
+            },
             {
               name: "Bagel (Protein Options - Served with Bagel)",
+              interestingness: 0.5,
             },
           ],
         },
@@ -407,6 +414,7 @@ describe("#parseMySchoolMenusJson", () => {
           items: [
             {
               name: "Early Release Salad Bar",
+              interestingness: 0.5,
             },
           ],
         },
@@ -415,9 +423,11 @@ describe("#parseMySchoolMenusJson", () => {
           items: [
             {
               name: "Fruit, Rotating Selection",
+              interestingness: 0,
             },
             {
               name: "Dried Fruit, Rotating Selection",
+              interestingness: 0,
             },
           ],
         },
@@ -426,10 +436,12 @@ describe("#parseMySchoolMenusJson", () => {
           items: [
             {
               name: "1% Milk",
+              interestingness: 0,
             },
 
             {
               name: "Nonfat Milk",
+              interestingness: 0,
             },
           ],
         },
@@ -438,9 +450,11 @@ describe("#parseMySchoolMenusJson", () => {
           items: [
             {
               name: "Sunflower Seeds, Honey Roasted",
+              interestingness: 0,
             },
             {
               name: "Misc. Salad Bar Items, As Available",
+              interestingness: 0,
             },
           ],
         },
