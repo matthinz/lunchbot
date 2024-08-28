@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { parseCalendarDate } from "./calendar-dates";
+import { DistrictMenuConfigSchema } from "./schemas";
 
 const DEFAULT_CACHE_DIRECTORY = ".cache";
 const DEFAULT_PORT = 3000;
@@ -12,8 +13,10 @@ export const AppOptionsSchema = z
       .int()
       .default(DEFAULT_CACHE_TTL_IN_MS),
     LUNCH_BOT_CACHE_DIR: z.string().default(DEFAULT_CACHE_DIRECTORY),
-    LUNCH_BOT_DISTRICT_ID: z.coerce.number().int(),
-    LUNCH_BOT_MENU_ID: z.coerce.number().int(),
+    LUNCH_BOT_DISTRICT_MENU_CONFIG: z
+      .string()
+      .transform((s) => JSON.parse(s))
+      .pipe(DistrictMenuConfigSchema),
     LUNCH_BOT_SLACK_VERIFICATION_TOKEN: z.string().optional(),
     LUNCH_BOT_TIMEZONE: z.string(),
     LUNCH_BOT_URL: z
@@ -27,8 +30,7 @@ export const AppOptionsSchema = z
     ({
       LUNCH_BOT_CACHE_TTL_IN_MS: cacheTTLInMS,
       LUNCH_BOT_CACHE_DIR: cacheDirectory,
-      LUNCH_BOT_DISTRICT_ID: districtID,
-      LUNCH_BOT_MENU_ID: menuID,
+      LUNCH_BOT_DISTRICT_MENU_CONFIG: districtMenuConfig,
       LUNCH_BOT_SLACK_VERIFICATION_TOKEN: slackVerificationToken,
       LUNCH_BOT_TIMEZONE: timezone,
       LUNCH_BOT_URL: url,
@@ -36,8 +38,7 @@ export const AppOptionsSchema = z
     }) => ({
       cacheTTLInMS,
       cacheDirectory,
-      districtID,
-      menuID,
+      districtMenuConfig,
       port,
       slackVerificationToken,
       timezone,
@@ -48,6 +49,8 @@ export const AppOptionsSchema = z
     ...values,
     url: values.url ?? new URL(`http://localhost:${values.port}`),
   }));
+
+export type DistrictMenuConfig = z.infer<typeof DistrictMenuConfigSchema>;
 
 export type AppOptions = z.infer<typeof AppOptionsSchema>;
 

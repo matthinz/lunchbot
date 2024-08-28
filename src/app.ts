@@ -1,45 +1,45 @@
 import express, { Request, Response } from "express";
 import path from "node:path";
 import { createFileSystemCacheMiddleware, createHttpGetter } from "./http";
+import { districtMenuMiddleware } from "./middleware/district-menu";
 import { createMySchoolMenusFetcher } from "./my-school-menus";
 import { menuRoute } from "./routes/menu";
 import { menuRssRoute } from "./routes/rss";
-import { slashCommand } from "./routes/slash-command";
-import { AppOptions } from "./types";
+import { AppOptions, MenuFetcher } from "./types";
+
+type FetcherFactory = (districtID: number, menuID: number) => MenuFetcher;
 
 export function createApp(options: AppOptions): { start: () => Promise<void> } {
   const app = express();
 
-  const fetcher = createMySchoolMenusFetcher({
-    ...options,
-    httpGetter: createHttpGetter({
-      middleware: [
-        createFileSystemCacheMiddleware({
-          cacheDirectory: options.cacheDirectory,
-          ttlMS: options.cacheTTLInMS,
-        }),
-      ],
-    }),
-  });
-
   app.use(express.static(path.join(__dirname, "../public")));
 
-  app.get("/menu", asyncRouteHandler(menuRoute({ ...options, fetcher })));
-
-  app.get(
-    "/menu/rss",
-    asyncRouteHandler(menuRssRoute({ ...options, fetcher })),
-  );
-
   app.use(
-    "/slack/lunch",
-    express.urlencoded({
-      extended: false,
+    "/menus/:district/:menu",
+    districtMenuMiddleware({
+      ...options,
+      createFetcher(districtID, menuID) {
+        return createMySchoolMenusFetcher({
+          districtID,
+          menuID,
+          httpGetter: createHttpGetter({
+            middleware: [
+              createFileSystemCacheMiddleware({
+                cacheDirectory: options.cacheDirectory,
+                ttlMS: options.cacheTTLInMS,
+              }),
+            ],
+          }),
+        });
+      },
     }),
   );
-  app.post(
-    "/slack/lunch",
-    asyncRouteHandler(slashCommand({ ...options, fetcher })),
+
+  app.get("/menus/:district/:menu", asyncRouteHandler(menuRoute(options)));
+
+  app.get(
+    "/menu/:district/:menu/rss",
+    asyncRouteHandler(menuRssRoute(options)),
   );
 
   const start = () =>

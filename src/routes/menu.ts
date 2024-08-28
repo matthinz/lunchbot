@@ -2,11 +2,11 @@ import { Request, Response } from "express";
 import { DocType, render, TAGS } from "h";
 import { formatCalendarDate } from "../calendar-dates";
 import { getMenusForDates } from "../menu";
+import { districtAndMenuForRequest } from "../middleware/district-menu";
 import { getWeekDays, WeekDay } from "../time-thinker";
-import { MenuCategory, MenuFetcher, MenuItem } from "../types";
+import { MenuCategory, MenuItem } from "../types";
 
 type MenuRouteOptions = {
-  fetcher: MenuFetcher;
   timezone: string;
 };
 
@@ -16,7 +16,6 @@ type WeekDayWithMenu = WeekDay & {
 };
 
 export function menuRoute({
-  fetcher,
   timezone,
 }: MenuRouteOptions): (req: Request, res: Response) => Promise<void> {
   return async (req, res) => {
@@ -42,6 +41,10 @@ export function menuRoute({
     });
 
     res.header("cache-control", "no-cache");
+
+    const { fetcher } = districtAndMenuForRequest(req);
+
+    console.error(districtAndMenuForRequest(req));
 
     const menus = await getMenusForDates({
       dates: weekdays.map(({ date }) => date),

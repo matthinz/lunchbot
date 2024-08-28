@@ -4,25 +4,22 @@ import { Feed } from "feed";
 import { Node, renderMarkdown, TAGS } from "h";
 import { calendarDateToDate, formatCalendarDate } from "../calendar-dates";
 import { getMenusForDates } from "../menu";
+import { districtAndMenuForRequest } from "../middleware/district-menu";
 import { getWeekDays, WeekDay } from "../time-thinker";
-import { MenuCategory, MenuFetcher, MenuRecipeItem } from "../types";
+import { MenuCategory, MenuRecipeItem } from "../types";
 
 type MenuRssRouteOptions = {
-  fetcher: MenuFetcher;
   timezone: string;
   url: URL;
-  menuID: number;
-  districtID: number;
 };
 
 export function menuRssRoute({
-  districtID,
-  fetcher,
-  menuID,
   timezone,
   url,
 }: MenuRssRouteOptions): (req: Request, res: Response) => Promise<void> {
   return async (req, res) => {
+    const { fetcher, menuID, districtID } = districtAndMenuForRequest(req);
+
     const days = getWeekDays({
       referenceDate: new Date(),
       timezone,
