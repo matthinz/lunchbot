@@ -16,5 +16,9 @@ async function run() {
 
   await app.start();
 
-  console.log("Listening on port %d", options.port);
+  console.log(
+    "Listening on port %d (url: %s)",
+    options.port,
+    options.url.toString(),
+  );
 }

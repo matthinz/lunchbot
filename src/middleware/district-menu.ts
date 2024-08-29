@@ -23,9 +23,6 @@ export function districtMenuMiddleware({
   return (req, res, next) => {
     const parsed = paramsSchema.safeParse(req.params);
 
-    console.error(parsed);
-    console.error(districtMenuConfig);
-
     if (!parsed.success) {
       res.status(404).end();
       return;
@@ -35,7 +32,6 @@ export function districtMenuMiddleware({
     const menuSlug = parsed.data.menu;
 
     const district = districtMenuConfig[districtSlug];
-    console.error(district);
     if (!district) {
       res.status(404).end();
     }
