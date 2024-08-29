@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, urlencoded } from "express";
 import path from "node:path";
 import { createFileSystemCacheMiddleware, createHttpGetter } from "./http";
 import { districtMenuMiddleware } from "./middleware/district-menu";
@@ -6,6 +6,7 @@ import { requestLoggingMiddleware } from "./middleware/logging";
 import { createMySchoolMenusFetcher } from "./my-school-menus";
 import { menuRoute } from "./routes/menu";
 import { menuRssRoute } from "./routes/rss";
+import { slashCommandRoute } from "./routes/slash-command";
 import { AppOptions } from "./types";
 
 export function createApp(options: AppOptions): { start: () => Promise<void> } {
@@ -42,6 +43,14 @@ export function createApp(options: AppOptions): { start: () => Promise<void> } {
     "/menus/:district/:menu/rss",
     asyncRouteHandler(menuRssRoute(options)),
   );
+
+  app.use(
+    "/slack/lunch",
+    urlencoded({
+      extended: false,
+    }),
+  );
+  app.post("/slack/lunch", asyncRouteHandler(slashCommandRoute(options)));
 
   const start = () =>
     new Promise<void>((resolve, reject) => {
