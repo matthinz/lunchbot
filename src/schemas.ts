@@ -1,10 +1,12 @@
 import { z } from "zod";
 
+export const SlugSchema = z.string().regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]?$/);
+
 export const DistrictMenuConfigSchema = z.record(
-  z.string().regex(/^[a-z0-9]+$/),
+  SlugSchema,
   z.object({
     id: z.number().int(),
-    menus: z.record(z.string().regex(/^[a-z0-9]+$/), z.number().int()),
+    menus: z.record(SlugSchema, z.number().int()),
   }),
 );
 
