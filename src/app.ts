@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import path from "node:path";
 import { createFileSystemCacheMiddleware, createHttpGetter } from "./http";
 import { districtMenuMiddleware } from "./middleware/district-menu";
+import { requestLoggingMiddleware } from "./middleware/logging";
 import { createMySchoolMenusFetcher } from "./my-school-menus";
 import { menuRoute } from "./routes/menu";
 import { menuRssRoute } from "./routes/rss";
@@ -11,6 +12,8 @@ export function createApp(options: AppOptions): { start: () => Promise<void> } {
   const app = express();
 
   app.use(express.static(path.join(__dirname, "../public")));
+
+  app.use(requestLoggingMiddleware);
 
   app.use(
     "/menus/:district/:menu",
