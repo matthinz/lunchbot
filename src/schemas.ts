@@ -37,6 +37,7 @@ export const AppOptionsSchema = z
       .url()
       .transform((url) => new URL(url))
       .optional(),
+    LUNCH_BOT_RSS_FEED_VERSION: z.coerce.number().optional(),
     PORT: z.coerce.number().int().default(DEFAULT_PORT),
   })
   .transform(
@@ -44,6 +45,7 @@ export const AppOptionsSchema = z
       LUNCH_BOT_CACHE_TTL_IN_MS: cacheTTLInMS,
       LUNCH_BOT_CACHE_DIR: cacheDirectory,
       LUNCH_BOT_DISTRICT_MENU_CONFIG: districtMenuConfig,
+      LUNCH_BOT_RSS_FEED_VERSION: rssFeedVersion,
       LUNCH_BOT_SLACK_VERIFICATION_TOKEN: slackVerificationToken,
       LUNCH_BOT_TIMEZONE: timezone,
       LUNCH_BOT_URL: url,
@@ -53,6 +55,7 @@ export const AppOptionsSchema = z
       cacheDirectory,
       districtMenuConfig,
       port,
+      rssFeedVersion,
       slackVerificationToken,
       timezone,
       url,

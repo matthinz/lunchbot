@@ -9,11 +9,13 @@ import { getWeekDays, WeekDay } from "../time-thinker";
 import { Menu, MenuCategory, MenuRecipeItem } from "../types";
 
 type MenuRssRouteOptions = {
+  rssFeedVersion?: number;
   timezone: string;
   url: URL;
 };
 
 export function menuRssRoute({
+  rssFeedVersion,
   timezone,
   url,
 }: MenuRssRouteOptions): (req: Request, res: Response) => Promise<void> {
@@ -36,6 +38,7 @@ export function menuRssRoute({
         renderRss({
           menuSlug,
           districtSlug,
+          rssFeedVersion,
           timezone,
           url,
           menus: menus.map((menu, i) => ({
@@ -55,6 +58,7 @@ type RenderRssOptions = {
   menus: DailyMenu[];
   districtSlug: string;
   menuSlug: string;
+  rssFeedVersion?: number;
   timezone: string;
   url: URL;
 };
@@ -62,6 +66,7 @@ type RenderRssOptions = {
 function renderRss({
   menus,
   url,
+  rssFeedVersion,
   timezone,
   menuSlug,
   districtSlug,
@@ -70,7 +75,7 @@ function renderRss({
   const niceFirstDay = formatCalendarDate(firstDay);
   const title = `Menu for the week of ${niceFirstDay}`;
   const link = new URL(
-    `/menus/${encodeURIComponent(districtSlug)}/${encodeURIComponent(menuSlug)}?date=${niceFirstDay}`,
+    `/menus/${encodeURIComponent(districtSlug)}/${encodeURIComponent(menuSlug)}?date=${niceFirstDay}${rssFeedVersion == null ? "" : `&v=${encodeURIComponent(rssFeedVersion)}`}`,
     url,
   ).toString();
 
