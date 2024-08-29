@@ -18,7 +18,7 @@ export function menuRssRoute({
   url,
 }: MenuRssRouteOptions): (req: Request, res: Response) => Promise<void> {
   return async (req, res) => {
-    const { fetcher, menuID, districtID } = districtAndMenuForRequest(req);
+    const { fetcher, menuSlug, districtSlug } = districtAndMenuForRequest(req);
 
     const days = getWeekDays({
       referenceDate: new Date(),
@@ -34,8 +34,8 @@ export function menuRssRoute({
       .contentType("text/xml")
       .send(
         renderRss({
-          menuID,
-          districtID,
+          menuSlug,
+          districtSlug,
           timezone,
           url,
           menus: menus.map((menu, i) => ({
@@ -53,8 +53,8 @@ type DailyMenu = WeekDay & Menu;
 
 type RenderRssOptions = {
   menus: DailyMenu[];
-  districtID: number;
-  menuID: number;
+  districtSlug: string;
+  menuSlug: string;
   timezone: string;
   url: URL;
 };
@@ -63,13 +63,16 @@ function renderRss({
   menus,
   url,
   timezone,
-  menuID,
-  districtID,
+  menuSlug,
+  districtSlug,
 }: RenderRssOptions): string {
   const firstDay = menus[0].date;
   const niceFirstDay = formatCalendarDate(firstDay);
   const title = `Menu for the week of ${niceFirstDay}`;
-  const link = new URL(`/menu?date=${niceFirstDay}`, url).toString();
+  const link = new URL(
+    `/menus/${encodeURIComponent(districtSlug)}/${encodeURIComponent(menuSlug)}?date=${niceFirstDay}`,
+    url,
+  ).toString();
 
   // Go to 10 AM the day before the first day
   const date = addDays(
@@ -95,7 +98,7 @@ function renderRss({
     link,
     title,
     description: `School lunch menu for the week of ${niceFirstDay}`,
-    id: `menu-${districtID}-${menuID}-${niceFirstDay}`,
+    id: `menu-${districtSlug}-${menuSlug}-${niceFirstDay}`,
     content: renderMarkdown(buildContent(menus)),
   });
 

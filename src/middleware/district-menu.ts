@@ -31,20 +31,25 @@ export function districtMenuMiddleware({
       return;
     }
 
-    const district = districtMenuConfig[parsed.data.district];
+    const districtSlug = parsed.data.district;
+    const menuSlug = parsed.data.menu;
+
+    const district = districtMenuConfig[districtSlug];
     console.error(district);
     if (!district) {
       res.status(404).end();
     }
 
-    const menuID = district.menus[parsed.data.menu];
+    const menuID = district.menus[menuSlug];
     if (!menuID) {
       res.status(404).end();
     }
 
     Object.assign(req, {
       districtID: district.id,
+      districtSlug,
       menuID,
+      menuSlug,
       fetcher: createFetcher(district.id, menuID),
     });
 
@@ -54,7 +59,9 @@ export function districtMenuMiddleware({
 
 export function districtAndMenuForRequest(req: Request): {
   districtID: number;
+  districtSlug: string;
   menuID: number;
+  menuSlug: string;
   fetcher: MenuFetcher;
 } {
   return req as unknown as ReturnType<typeof districtAndMenuForRequest>;

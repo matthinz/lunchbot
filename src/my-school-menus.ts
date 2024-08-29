@@ -110,6 +110,8 @@ export function parseMySchoolMenusJSON(json: any): Menu[] {
         return;
       }
 
+      const setting = figureOutSettingToUse(d);
+
       if (d.setting == null) {
         return;
       }
@@ -254,4 +256,12 @@ function augmentExistingItem(
 
   otherItem.name = `${otherItemName} (${rawItem.name})`;
   return true;
+}
+function figureOutSettingToUse({
+  setting,
+  setting_original: original,
+}: z.infer<typeof CalendarDaySchema>):
+  | z.infer<typeof DaySettingSchema>
+  | undefined {
+  return setting ?? original;
 }
