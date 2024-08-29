@@ -1,8 +1,12 @@
 import { Request, Response } from "express";
 import { z } from "zod";
+import { getWeekDays } from "../time-thinker";
+import { AppOptions, CalendarDate, DistrictMenuConfig } from "../types";
 
 type SlashCommandRouteOptions = {
+  districtMenuConfig: DistrictMenuConfig;
   slackVerificationToken?: string;
+  timezone: string;
 };
 
 const BodySchema = z.object({
@@ -21,7 +25,9 @@ const BodySchema = z.object({
 });
 
 export function slashCommandRoute({
+  districtMenuConfig,
   slackVerificationToken,
+  timezone,
 }: SlashCommandRouteOptions): (req: Request, res: Response) => Promise<void> {
   return async (req, res) => {
     const { token, ...body } = BodySchema.parse(req.body);
@@ -30,7 +36,50 @@ export function slashCommandRoute({
       return;
     }
 
-    console.error(body);
-    res.status(200).end();
+    const parsed = parseCommand(body.command, { districtMenuConfig, timezone });
+    if (!parsed) {
+      res.status(200).end();
+    }
+
+    res.json({
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: "*It's 80 degrees right now.*",
+          },
+        },
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: "Partly cloudy today and tomorrow",
+          },
+        },
+      ],
+    });
+  };
+}
+
+type ParsedCommand = {
+  dates: CalendarDate[];
+  district?: string;
+  menu?: string;
+};
+
+type ParseCommandOptions = Pick<AppOptions, "districtMenuConfig" | "timezone">;
+
+function parseCommand(
+  command: string,
+  { districtMenuConfig, timezone }: ParseCommandOptions,
+): ParsedCommand | undefined {
+  const weekdays = getWeekDays({
+    referenceDate: new Date(),
+    timezone,
+  });
+
+  return {
+    dates: weekdays.map(({ date }) => date),
   };
 }
