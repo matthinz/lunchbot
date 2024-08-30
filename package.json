@@ -22,6 +22,7 @@
     "feed": "^4.2.2",
     "h": "https://github.com/matthinz/h.git#435be53",
     "json-stable-stringify": "^1.1.1",
+    "morgan": "^1.10.0",
     "zod": "^3.23.8"
   },
   "scripts": {
