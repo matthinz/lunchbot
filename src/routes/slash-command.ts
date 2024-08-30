@@ -66,14 +66,17 @@ export function slashCommandRoute({
       fetcher,
     });
 
-    res.json(
-      blocksForMenus(
-        parsed.dates.map((date, i) => {
-          const menu = menus[i];
-          return { date, menu };
-        }),
-      ),
-    );
+    res
+      .status(200)
+      .json(
+        blocksForMenus(
+          parsed.dates.map((date, i) => {
+            const menu = menus[i];
+            return { date, menu };
+          }),
+        ),
+      )
+      .end();
   };
 }
 
