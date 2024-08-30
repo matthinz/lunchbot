@@ -46,6 +46,8 @@ export function slashCommandRoute({
 }: SlashCommandRouteOptions): (req: Request, res: Response) => Promise<void> {
   return async (req, res) => {
     const { token, ...body } = BodySchema.parse(req.body);
+    console.error(JSON.stringify(body));
+
     if (token !== slackVerificationToken || slackVerificationToken == null) {
       res.status(403).end();
       return;
