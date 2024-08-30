@@ -1,4 +1,5 @@
 import express, { Request, Response, urlencoded } from "express";
+import morgan from "morgan";
 import path from "node:path";
 import { createFileSystemCacheMiddleware, createHttpGetter } from "./http";
 import { districtMenuMiddleware } from "./middleware/district-menu";
@@ -94,7 +95,4 @@ function asyncRouteHandler(
       res.status(500).end();
     });
   };
-}
-function morgan(arg0: string): any {
-  throw new Error("Function not implemented.");
 }
