@@ -49,12 +49,14 @@ export function slashCommandRoute({
     console.error(JSON.stringify(body));
 
     if (token !== slackVerificationToken || slackVerificationToken == null) {
+      console.error("Slack token verification failed");
       res.status(403).end();
       return;
     }
 
     const parsed = parseCommand(body.command, { districtMenuConfig, timezone });
     if (!parsed) {
+      console.error("Could not parse incoming command");
       res.status(200).end();
       return;
     }
