@@ -114,6 +114,7 @@ function blocksForMenus(menus: DailyMenu[]): any {
   const firstDay = menus[0].date;
 
   return {
+    response_type: "in_channel",
     blocks: [
       {
         type: "rich_text",
