@@ -1,5 +1,11 @@
 import { formatCalendarMonth, isSameCalendarDate } from "./calendar-dates";
-import { CalendarDate, Menu, MenuFetcher } from "./types";
+import {
+  CalendarDate,
+  Menu,
+  MenuCategory,
+  MenuFetcher,
+  MenuRecipeItem,
+} from "./types";
 
 type GetMenusForDatesOptions = {
   dates: CalendarDate[];
@@ -36,5 +42,22 @@ export async function getMenusForDates({
         return result;
       }),
     Promise.resolve([]),
+  );
+}
+
+export function interestingItems(
+  categories: MenuCategory[],
+  threshold = 0.75,
+): [MenuCategory, MenuRecipeItem][] {
+  return categories.reduce<[MenuCategory, MenuRecipeItem][]>(
+    (result, category) => {
+      category.items.forEach((item) => {
+        if ("name" in item && item.interestingness >= threshold) {
+          result.push([category, item]);
+        }
+      });
+      return result;
+    },
+    [],
   );
 }

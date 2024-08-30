@@ -50,7 +50,31 @@ export function createApp(options: AppOptions): { start: () => Promise<void> } {
       extended: false,
     }),
   );
-  app.post("/slack/lunch", asyncRouteHandler(slashCommandRoute(options)));
+  app.post(
+    "/slack/lunch",
+    asyncRouteHandler(
+      slashCommandRoute({
+        ...options,
+        createFetcher(districtSlug, menuSlug) {
+          const districtID = options.districtMenuConfig[districtSlug].id;
+          const menuID =
+            options.districtMenuConfig[districtSlug].menus[menuSlug];
+          return createMySchoolMenusFetcher({
+            districtID,
+            menuID,
+            httpGetter: createHttpGetter({
+              middleware: [
+                createFileSystemCacheMiddleware({
+                  cacheDirectory: options.cacheDirectory,
+                  ttlMS: options.cacheTTLInMS,
+                }),
+              ],
+            }),
+          });
+        },
+      }),
+    ),
+  );
 
   const start = () =>
     new Promise<void>((resolve, reject) => {

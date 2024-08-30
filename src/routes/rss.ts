@@ -3,10 +3,10 @@ import { Request, Response } from "express";
 import { Feed } from "feed";
 import { Node, renderMarkdown, TAGS } from "h";
 import { calendarDateToDate, formatCalendarDate } from "../calendar-dates";
-import { getMenusForDates } from "../menu";
+import { getMenusForDates, interestingItems } from "../menu";
 import { districtAndMenuForRequest } from "../middleware/district-menu";
 import { getWeekDays, WeekDay } from "../time-thinker";
-import { Menu, MenuCategory, MenuRecipeItem } from "../types";
+import { Menu } from "../types";
 
 type MenuRssRouteOptions = {
   rssFeedVersion?: number;
@@ -159,21 +159,4 @@ function buildContent(menus: DailyMenu[]): Node {
       ]);
     }
   }
-}
-
-function interestingItems(
-  categories: MenuCategory[],
-  threshold = 0.75,
-): [MenuCategory, MenuRecipeItem][] {
-  return categories.reduce<[MenuCategory, MenuRecipeItem][]>(
-    (result, category) => {
-      category.items.forEach((item) => {
-        if ("name" in item && item.interestingness >= threshold) {
-          result.push([category, item]);
-        }
-      });
-      return result;
-    },
-    [],
-  );
 }
